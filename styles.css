@@ -1,0 +1,271 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Centrado vertical */
+  flex-direction: column;
+}
+
+/* Main Form Container */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px; /* Límite de ancho para pantallas grandes */
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+/* Title & Author */
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.author {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Input Group: Inputs for Calculations */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  max-width: 300px; /* Limitar el ancho máximo */
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.form-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.radio-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.radio-buttons input {
+  margin-right: 5px;
+}
+
+select.form-input {
+  width: 100%;
+  max-width: 250px;
+}
+
+/* Button Styles */
+.form-button {
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.form-button:hover {
+  background-color: #0056b3;
+}
+
+.form-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Result Group: Display Results */
+.result-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.result-group .form-input {
+  background-color: #f1f1f1;
+  cursor: not-allowed;
+  font-size: 18px;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* ListBox Container */
+.listbox-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.listbox-container .form-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 250px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .form-container {
+    padding: 15px;
+    margin-top: 10px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .form-input {
+    font-size: 14px;
+  }
+
+  .form-button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .result-group .form-input {
+    font-size: 16px;
+    padding: 8px;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .listbox-container .form-input {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .radio-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px;
+  }
+
+  .author {
+    font-size: 12px;
+  }
+
+  .form-button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .form-input {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .result-group .form-input {
+    font-size: 14px;
+    padding: 8px;
+    width: 100%;
+    max-width: 250px;
+  }
+}
+
+/* Adjustments for very small screens */
+.textboxes-under-listbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+.textboxes-under-listbox .form-input {
+  max-width: 300px;
+  width: 100%;
+}
+
+/* Buttons alignment on mobile */
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.buttons-container .form-button {
+  max-width: 300px;
+  width: 100%;
+}
+
+/* Positioning Buttons below Radio Buttons */
+.buttons-container {
+  margin-top: 20px;
+}

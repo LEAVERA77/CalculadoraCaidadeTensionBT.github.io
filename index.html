@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+   <meta charset="UTF-8"> <!-- Meta para la codificación UTF-8 -->
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Calculadora de caída de tensión - Líneas de baja tensión</title>
+   <link rel="stylesheet" href="styles.css"> <!-- Vincula tu archivo CSS -->
+</head>
+
+<body>
+  <div class="form-container">
+    <!-- Title and Author -->
+    <div class="title">Calculadora de caída de tensión - Líneas de baja tensión</div>
+    <div class="author">Autor: Leandro Vera</div>
+
+    <!-- Top Inputs: Potencia, Distancia, Corriente -->
+    <div class="top-inputs">
+      <div class="form-group">
+        <label class="form-label">Ingrese Potencia [kW]:</label>
+        <input type="text" id="potenciaTextBox" class="form-input" oninput="actualizarCorriente()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ingrese distancia [m]:</label>
+        <input type="text" id="distanciaTextBox" class="form-input" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ingrese Corriente [A]:</label>
+        <input type="text" id="corrienteTextBox" class="form-input" oninput="actualizarPotencia()">
+      </div>
+    </div>
+
+    <!-- Radio Buttons (Tipo de cable) -->
+    <div class="radio-buttons">
+      <div>
+        <input type="radio" id="subtOptionButton" name="tipoCable" value="subterráneo">
+        <label for="subtOptionButton">Cable Subterráneo</label>
+      </div>
+      <div>
+        <input type="radio" id="preensOptionButton" name="tipoCable" value="aéreo" onclick="llenarSeccionListBox(matriz_preens)" checked>
+        <label for="preensOptionButton">Aéreo Preensamblado</label>
+      </div>
+    </div>
+
+    <!-- Material, Sección, and Sistema Inputs -->
+    <div class="input-group">
+      <div class="form-group">
+        <label class="form-label">Tipo de conductor:</label>
+        <select id="materialListBox" class="form-input" onchange="llenarSeccionListBox(matriz_preens)">
+          <option value="COBRE">Cobre</option>
+          <option value="ALUMINIO" selected>Aluminio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sección [mm²]:</label>
+        <select id="seccionListBox" class="form-input" onchange="seleccionarSeccion()">
+        </select>
+      </div>
+ <div class="form-group">
+  <label class="form-label">Sistema:</label>
+  <select id="sistemaListBox" class="form-input" onchange="actualizarVolts()">
+    <option value="monofasico">Monofásico</option>
+    <option value="trifasico" selected>Trifásico</option>
+  </select>
+</div>
+<div class="form-group">
+  <label class="form-label" id="tensionLabel">Tensión: </label>
+</div>
+
+    <!-- Remaining Textboxes -->
+   <div class="input-group">
+  <div class="form-group">
+    <label class="form-label">Factor de potencia:</label>
+    <input type="text" id="FDPTextBox" class="form-input" value="0.85">
+  </div>
+</div>
+        <div class="form-group">
+        <label class="form-label">Resistencia [Ω/km]:</label>
+        <input type="text" id="resistenciaTextBox" class="form-input" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reactancia [Ω/km]:</label>
+        <input type="text" id="reactanciaTextBox" class="form-input" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Corriente máxima admisible [A]:</label>
+        <input type="text" id="corrientemaximaTextBox" class="form-input" value="">
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="form-group">
+      <button class="form-button" id="CommandButton1" onclick="calcular()">Calcular</button>
+    </div>
+    
+    <!-- Calculations Results -->
+    <div class="result-group">
+      <div class="form-group">
+        <label class="form-label" for="caidavoltsTextBox">Caída de tensión [V]:</label>
+        <input type="text" id="caidavoltsTextBox" class="form-input result" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="caidaporcTextBox">Caída de tensión [%]:</label>
+        <input type="text" id="caidaporcTextBox" class="form-input result" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="tensioncargaTextBox">Tensión en la carga [V]:</label>
+        <input type="text" id="tensioncargaTextBox" class="form-input result" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="potenciacargaTextBox">Pérdida de Potencia:</label>
+        <input type="text" id="perdidapotenciaTextBox" class="form-input result" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="potenciacargaTextBox">Potencia en la carga:</label>
+        <input type="text" id="potenciacargaTextBox" class="form-input result" value="">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="rendimientoTextBox">Rendimiento [%]:</label>
+        <input type="text" id="rendimientoTextBox" class="form-input result" value="">
+      </div>
+    </div>
+  </div>
+
+<script>
+let volts = 400; // Valor inicial de la variable volts (por ejemplo, para trifásico)
+  let potencia, distancia, corriente, fdp, resistencia, reactancia, sistema, anguloRad, seno;
+  let rescalc, reactcalc, caida, porcentaje, tensionCarga, potenciaInicial, potenciaPerdida, potenciaCarga, rendimiento, voltsPerdidos;
+
+  // Matrices para tipos de cables
+  const matriz_subt_cobre = [
+    ["4x6", 3.95, 0.0901, 56],
+    ["4x10", 2.29, 0.086, 73],
+    ["4x16", 1.45, 0.0813, 96],
+    ["3x25/16", 0.933, 0.078, 121],
+    ["3x35/16", 0.633, 0.076, 145],
+    ["3x50/25", 0.464, 0.0777, 170],
+    ["3x70/35", 0.321, 0.0736, 207],
+    ["3x95/50", 0.232, 0.0733, 245],
+    ["3x120/70", 0.184, 0.0729, 281],
+    ["3x150/70", 0.150, 0.0720, 316],
+    ["3x185/95", 0.121, 0.072, 355],
+    ["3x240/120", 0.0911, 0.0716, 412],
+    ["3x300/150", 0.0730, 0.0714, 465]
+  ];
+
+  const matriz_subt_aluminio = [
+    ["4x4", 9.06, 0.0991, 23],
+    ["4x6", 6.01, 0.0901, 29],
+    ["4x10", 3.61, 0.086, 40],
+    ["4x16", 2.27, 0.0813, 53],
+    ["3x25/16", 1.44, 0.078, 67],
+    ["3x35/16", 1.04, 0.076, 82],
+    ["3x50/25", 0.77, 0.0777, 101],
+    ["3x70/35", 0.54, 0.0736, 129],
+    ["3x95/50", 0.39, 0.0733, 157],
+    ["3x120/70", 0.305, 0.0729, 181],
+    ["3x150/70", 0.249, 0.072, 221],
+    ["3x185/95", 0.198, 0.072, 252],
+    ["3x240/120", 0.152, 0.0716, 298]
+  ];
+
+  const matriz_preens_cobre = [
+    ["2x4", 5.381, 0.088, 49],
+    ["2x6", 3.587, 0.084, 63],
+    ["4x4", 5.381, 0.088, 33],
+    ["4x6", 3.587, 0.084, 43],
+    ["4x10", 2.095, 0.08, 59],
+    ["4x16", 1.331, 0.077, 79]
+  ];
+
+  const matriz_preens = [
+    ["1X25/25", 1.458, 0.068, 115],
+    ["1x35/50", 1.059, 0.068, 141],
+    ["3x35/50+25", 1.108, 0.088, 103],
+    ["3x50/50+25", 0.745, 0.086, 124],
+    ["3x70/50+25", 0.515, 0.085, 160],
+    ["3x95/50+25", 0.373, 0.084, 200]
+  ];
+
+  // Función para actualizar la tensión según el sistema seleccionado
+  function actualizarVolts() {
+    const sistema = document.getElementById("sistemaListBox").value;
+    const tensionLabel = document.getElementById("tensionLabel");
+
+    if (sistema === "monofasico") {
+      volts = 230;
+    } else if (sistema === "trifasico") {
+      volts = 400;
+    }
+
+    tensionLabel.textContent = `Tensión: ${volts} [V]`;
+  }
+
+  // Función para seleccionar la matriz según el tipo de sistema y material
+  function seleccionarMatriz() {
+    const materialListBox = document.getElementById("materialListBox");
+    const preensOptionButton = document.getElementById("preensOptionButton");
+    const subtOptionButton = document.getElementById("subtOptionButton");
+
+    let matrizSeleccionada;
+
+    // Se selecciona la matriz de acuerdo con el tipo de sistema y el material
+    if (preensOptionButton.checked) {
+      matrizSeleccionada = materialListBox.value === "ALUMINIO" ? matriz_preens : matriz_preens_cobre;
+    } else if (subtOptionButton.checked) {
+      matrizSeleccionada = materialListBox.value === "ALUMINIO" ? matriz_subt_aluminio : matriz_subt_cobre;
+    }
+
+    return matrizSeleccionada;
+  }
+
+  // Función para llenar el ListBox con las secciones de la matriz seleccionada
+function llenarSeccionListBox(matriz) {
+  const seccionListBox = document.getElementById("seccionListBox");
+  seccionListBox.innerHTML = ""; // Limpiar el ListBox
+  matriz.forEach(row => {
+    let option = document.createElement("option");
+    option.text = row[0]; // Colocar el nombre de la sección en la lista
+    seccionListBox.add(option);
+  });
+
+    // Actualizar los valores de resistencia, reactancia y corriente al seleccionar la sección
+    seleccionarSeccion();
+  }
+
+  // Función para seleccionar la sección y actualizar los valores de resistencia, reactancia y corriente
+  function seleccionarSeccion() {
+    const seccionListBox = document.getElementById("seccionListBox");
+    const resistenciaTextBox = document.getElementById("resistenciaTextBox");
+    const reactanciaTextBox = document.getElementById("reactanciaTextBox");
+    const corrientemaximaTextBox = document.getElementById("corrientemaximaTextBox");
+
+    let matrizSeleccionada = seleccionarMatriz();  // Llamar la función para obtener la matriz correcta
+
+    // Buscar la fila seleccionada en la matriz
+    const seleccionada = seccionListBox.value;
+    const fila = matrizSeleccionada.find(row => row[0] === seleccionada);
+
+    if (fila) {
+      // Actualizar los valores en los campos correspondientes
+      resistenciaTextBox.value = fila[1];
+      reactanciaTextBox.value = fila[2];
+      corrientemaximaTextBox.value = fila[3];
+    }
+  }
+
+  // Función para recargar el formulario al cambiar el material o la opción de sistema
+  function recargarFormulario() {
+    const matrizSeleccionada = seleccionarMatriz();  // Obtener la matriz según el material y sistema seleccionado
+    llenarSeccionListBox(matrizSeleccionada);  // Llenar el ListBox con la matriz correcta
+  }
+
+  // Inicializar el formulario con valores por defecto
+  actualizarVolts();
+  recargarFormulario();
+
+  // Añadir event listeners a los radio buttons y el material ListBox para recargar el formulario cuando cambien
+  document.getElementById("preensOptionButton").addEventListener("change", recargarFormulario);
+  document.getElementById("subtOptionButton").addEventListener("change", recargarFormulario);
+  document.getElementById("materialListBox").addEventListener("change", recargarFormulario);
+  document.getElementById("seccionListBox").addEventListener("change", seleccionarSeccion);
+    
+    function actualizarCorriente() {
+      const potenciaTextBox = document.getElementById("potenciaTextBox");
+      const corrienteTextBox = document.getElementById("corrienteTextBox");
+      const sistemaListBox = document.getElementById("sistemaListBox");
+      const fdp = parseFloat(document.getElementById("FDPTextBox").value);
+      const volts = sistemaListBox.selectedIndex === 0 ? 230 : 400; // 230V para monofásico y 400V para trifásico
+      if (potenciaTextBox.value !== "" && sistemaListBox.selectedIndex !== -1) {
+        const potencia = parseFloat(potenciaTextBox.value);
+        const corriente = (potencia * 1000) / (sistemaListBox.selectedIndex === 0 ? volts * fdp : Math.sqrt(3) * volts * fdp);
+        corrienteTextBox.value = corriente.toFixed(1);
+      }
+    }
+    // Función para actualizar la potencia cuando se cambia la corriente
+    function actualizarPotencia() {
+      const potenciaTextBox = document.getElementById("potenciaTextBox");
+      const corrienteTextBox = document.getElementById("corrienteTextBox");
+      const sistemaListBox = document.getElementById("sistemaListBox");
+      const fdp = parseFloat(document.getElementById("FDPTextBox").value);
+      const volts = sistemaListBox.selectedIndex === 0 ? 230 : 400; // 230V para monofásico y 400V para trifásico
+     
+    // Verificar si el valor ingresado en corriente es un número válido
+      if (corrienteTextBox.value !== "") {
+        const corriente = parseFloat(corrienteTextBox.value);
+        if (isNaN(corriente) || corriente <= 0) {
+          alert("¡Debe ingresar un valor válido para la corriente!");
+          corrienteTextBox.value = ""; // Limpiar el valor de corriente
+          return;
+        }
+        let potencia;
+        if (sistemaListBox.selectedIndex === 0) {
+          potencia = (corriente * volts * fdp) / 1000; // Cálculo para monofásico
+        } else {
+          potencia = (corriente * Math.sqrt(3) * volts * fdp) / 1000; // Cálculo para trifásico
+        }
+        potenciaTextBox.value = potencia.toFixed(1); // Actualizar el valor de potencia
+      }
+    }
+   
+function calcular() {
+    // Validación: Verificar si no se ingresó ningún valor en los campos necesarios
+    let potenciaTextBox = document.getElementById('potenciaTextBox');
+    let distanciaTextBox = document.getElementById('distanciaTextBox');
+    
+    if (potenciaTextBox.value === "" || distanciaTextBox.value === "") {
+        alert("¡Debe ingresar un valor en Potencia y Distancia!");
+        return;
+    }
+
+    // Obtener valores de los textbox
+    let fdp = parseFloat(document.getElementById('FDPTextBox').value); // Factor de potencia
+    let distancia = parseFloat(distanciaTextBox.value);
+    let corriente = parseFloat(document.getElementById('corrienteTextBox').value);
+    let resistencia = parseFloat(document.getElementById('resistenciaTextBox').value); // Resistencia
+    let reactancia = parseFloat(document.getElementById('reactanciaTextBox').value); // Reactancia
+    let sistema = document.getElementById('sistemaListBox').value; // Sistema (Monofásico o Trifásico)
+    
+    if (isNaN(fdp) || isNaN(distancia) || isNaN(corriente) || isNaN(resistencia) || isNaN(reactancia)) {
+        alert("¡Todos los valores deben ser numéricos!");
+        return;
+    }
+
+    // Validar que el factor de potencia esté en el rango permitido
+    if (fdp < -1 || fdp > 1) {
+        alert("¡El Factor de Potencia debe estar entre -1 y 1!");
+        return;
+    }
+
+    // Calcular el ángulo en radianes
+    let anguloRad = Math.acos(fdp);
+    let seno = Math.sin(anguloRad);
+
+    let volts, rescalc, reactcalc, caida, porcentaje, tensionCarga, potenciaInicial, voltsPerdidos, potenciaPerdida, potenciaCarga, rendimiento;
+
+    // Calcular para sistema TRIFÁSICO
+    if (sistema === "trifasico") {
+        // Verificar si el sistema es trifásico
+        volts = (document.getElementById('sistemaListBox').selectedIndex === 0) ? 230 : 400;
+
+        rescalc = resistencia * fdp;
+        reactcalc = reactancia * seno;
+
+        caida = Math.sqrt(3) * distancia * 0.001 * corriente * (rescalc + reactcalc);
+        caida = Math.round(caida * 10) / 10; // Truncar a un decimal
+        porcentaje = Math.round(((caida / volts) * 100) * 10) / 10; // Truncar a un decimal
+        tensionCarga = volts - caida;
+        tensionCarga = Math.round(tensionCarga * 10) / 10; // Truncar a un decimal
+
+        // Actualizar los valores en los textboxes
+        document.getElementById('caidavoltsTextBox').value = caida + " V";
+        document.getElementById('caidaporcTextBox').value = porcentaje + " %";
+        document.getElementById('tensioncargaTextBox').value = tensionCarga < 0 ? "0 V" : tensionCarga + " V";
+
+        // Cambiar color del texto si caída es mayor a 3%
+        if (porcentaje > 3) {
+            document.getElementById('caidaporcTextBox').style.color = 'red';
+            document.getElementById('tensioncargaTextBox').style.color = 'red';
+        } else {
+            document.getElementById('caidaporcTextBox').style.color = 'black';
+            document.getElementById('tensioncargaTextBox').style.color = 'black';
+        }
+
+        // Calcular la potencia inicial y pérdida de potencia
+        potenciaInicial = corriente * Math.sqrt(3) * volts * fdp;
+        voltsPerdidos = volts - tensionCarga;
+        potenciaPerdida = corriente * Math.sqrt(3) * voltsPerdidos * fdp;
+        potenciaPerdida = Math.round(potenciaPerdida * 10) / 10; // Truncar a un decimal
+        document.getElementById('perdidapotenciaTextBox').value = potenciaPerdida + " W";
+
+        // Calcular la potencia en la carga
+        potenciaCarga = potenciaInicial - potenciaPerdida;
+        potenciaCarga = Math.round(potenciaCarga * 10) / 10; // Truncar a un decimal
+        document.getElementById('potenciacargaTextBox').value = potenciaCarga + " W";
+
+        // Calcular el rendimiento
+        rendimiento = (potenciaCarga / potenciaInicial) * 100;
+        rendimiento = Math.round(rendimiento * 10) / 10; // Truncar a un decimal
+        document.getElementById('rendimientoTextBox').value = rendimiento + " %";
+    }
+    
+    // Calcular para sistema MONOFÁSICO
+    else if (sistema === "monofasico") {
+        volts = 230;
+
+        rescalc = resistencia * fdp;
+        reactcalc = reactancia * seno;
+
+        caida = 2 * distancia * 0.001 * corriente * (rescalc + reactcalc);
+        caida = Math.round(caida * 10) / 10; // Truncar a un decimal
+        porcentaje = Math.round(((caida / volts) * 100) * 10) / 10; // Truncar a un decimal
+        tensionCarga = volts - caida;
+        tensionCarga = Math.round(tensionCarga * 10) / 10; // Truncar a un decimal
+
+        // Actualizar los valores en los textboxes
+        document.getElementById('caidavoltsTextBox').value = caida + " V";
+        document.getElementById('caidaporcTextBox').value = porcentaje + " %";
+        document.getElementById('tensioncargaTextBox').value = tensionCarga < 0 ? "0 V" : tensionCarga + " V";
+
+        // Cambiar color del texto si caída es mayor a 3%
+        if (porcentaje > 3) {
+            document.getElementById('caidaporcTextBox').style.color = 'red';
+            document.getElementById('tensioncargaTextBox').style.color = 'red';
+        } else {
+            document.getElementById('caidaporcTextBox').style.color = 'black';
+            document.getElementById('tensioncargaTextBox').style.color = 'black';
+        }
+
+        // Calcular la potencia inicial y pérdida de potencia
+        potenciaInicial = corriente * volts * fdp;
+        voltsPerdidos = volts - tensionCarga;
+        potenciaPerdida = corriente * voltsPerdidos * fdp;
+        potenciaPerdida = Math.round(potenciaPerdida * 10) / 10; // Truncar a un decimal
+        document.getElementById('perdidapotenciaTextBox').value = potenciaPerdida + " W";
+
+        // Calcular la potencia en la carga
+        potenciaCarga = potenciaInicial - potenciaPerdida;
+        potenciaCarga = Math.round(potenciaCarga * 10) / 10; // Truncar a un decimal
+        document.getElementById('potenciacargaTextBox').value = potenciaCarga + " W";
+
+        // Calcular el rendimiento
+        rendimiento = (potenciaCarga / potenciaInicial) * 100;
+        rendimiento = Math.round(rendimiento * 10) / 10; // Truncar a un decimal
+        document.getElementById('rendimientoTextBox').value = rendimiento + " %";
+
+        // Mostrar los valores de resistencia y reactancia
+        document.getElementById('resistenciaTextBox').value = resistencia;
+        document.getElementById('reactanciaTextBox').value = reactancia;
+    }
+}
+
+  </script>
+
+</body>
+
+</html>
